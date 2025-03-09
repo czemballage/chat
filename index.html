@@ -114,6 +114,7 @@
             pointer-events: none;
             opacity: 0;
             transition: opacity 0.3s ease;
+            display: none;
         }
         
         .text-direction-indicator.visible {
@@ -362,12 +363,7 @@
             font-size: 12px;
             color: rgba(255,255,255,0.5);
             align-self: center;
-        }
-
-        .message-date span {
-            background-color: rgba(255,255,255,0.1);
-            padding: 4px 10px;
-            border-radius: 10px;
+            display: none;
         }
 
         .username-container {
@@ -476,6 +472,167 @@
             filter: blur(2px);
             z-index: -1;
         }
+        
+        .groups-container {
+            padding: 70px 10px 20px;
+            height: 100vh;
+            overflow-y: auto;
+        }
+        
+        .group-item {
+            display: flex;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            background-color: #1a1a1a;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            align-items: center;
+        }
+        
+        .group-item:hover, .group-item:active {
+            background-color: #262626;
+            transform: translateY(-2px);
+        }
+        
+        .group-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 25px;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-left: 15px;
+        }
+        
+        .group-info {
+            flex: 1;
+        }
+        
+        .group-name {
+            font-weight: 600;
+            font-size: 16px;
+            color: white;
+            margin: 0 0 5px;
+        }
+        
+        .group-last-message {
+            color: #a0a0a0;
+            font-size: 14px;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 180px;
+        }
+        
+        .group-meta {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 5px;
+        }
+        
+        .group-time {
+            font-size: 12px;
+            color: #a0a0a0;
+        }
+        
+        .group-unread {
+            background-color: var(--primary);
+            color: white;
+            font-size: 12px;
+            width: 24px;
+            height: 24px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .fab-container {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 100;
+        }
+        
+        .new-chat-button {
+            width: 60px;
+            height: 60px;
+            border-radius: 30px;
+            background-color: var(--primary);
+            color: white;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0, 105, 255, 0.4);
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+        }
+        
+        .new-chat-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 105, 255, 0.5);
+        }
+        
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .modal-container {
+            background-color: #1a1a1a;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .modal-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .modal-footer {
+            padding: 15px 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
     </style>
 </head>
 <body>
@@ -535,6 +692,152 @@
         </div>
     </div>
 
+    <!-- Groups Page -->
+    <div id="groups-page" class="page hidden">
+        <div class="chat-header">
+            <div class="flex-1">
+                <h1 class="text-lg font-medium">المحادثات</h1>
+                <span class="text-sm text-gray-400">اختر مجموعة للدردشة</span>
+            </div>
+            <button id="logout-button" class="action-button">
+                <i class="ri-logout-box-line"></i>
+            </button>
+        </div>
+
+        <div class="groups-container">
+            <div class="group-item" id="main-group">
+                <div class="group-avatar">
+                    <i class="ri-group-line"></i>
+                </div>
+                <div class="group-info">
+                    <h3 class="group-name">المجموعة العامة</h3>
+                    <p class="group-last-message">انضم للدردشة مع الجميع</p>
+                </div>
+                <div class="group-meta">
+                    <span class="group-time">الآن</span>
+                    <span class="group-unread">14</span>
+                </div>
+            </div>
+            <div class="group-item" id="group-friends">
+                <div class="group-avatar">
+                    <i class="ri-team-line"></i>
+                </div>
+                <div class="group-info">
+                    <h3 class="group-name">مجموعة الأصدقاء</h3>
+                    <p class="group-last-message">للنقاشات الودية والمرح</p>
+                </div>
+                <div class="group-meta">
+                    <span class="group-time">الآن</span>
+                    <span class="group-unread">5</span>
+                </div>
+            </div>
+            <div class="group-item" id="group-tech">
+                <div class="group-avatar">
+                    <i class="ri-code-line"></i>
+                </div>
+                <div class="group-info">
+                    <h3 class="group-name">مجموعة التقنية</h3>
+                    <p class="group-last-message">لمناقشة أحدث التقنيات</p>
+                </div>
+                <div class="group-meta">
+                    <span class="group-time">الآن</span>
+                    <span class="group-unread">3</span>
+                </div>
+            </div>
+            <div class="group-item" id="group-gaming">
+                <div class="group-avatar">
+                    <i class="ri-gamepad-line"></i>
+                </div>
+                <div class="group-info">
+                    <h3 class="group-name">مجموعة الألعاب</h3>
+                    <p class="group-last-message">لمحبي الألعاب الإلكترونية</p>
+                </div>
+                <div class="group-meta">
+                    <span class="group-time">الآن</span>
+                    <span class="group-unread">8</span>
+                </div>
+            </div>
+            <div class="group-item" id="group-sports">
+                <div class="group-avatar">
+                    <i class="ri-basketball-line"></i>
+                </div>
+                <div class="group-info">
+                    <h3 class="group-name">مجموعة الرياضة</h3>
+                    <p class="group-last-message">لمتابعة أخبار الرياضة</p>
+                </div>
+                <div class="group-meta">
+                    <span class="group-time">الآن</span>
+                    <span class="group-unread">6</span>
+                </div>
+            </div>
+            <div class="group-item" id="group-movies">
+                <div class="group-avatar">
+                    <i class="ri-movie-line"></i>
+                </div>
+                <div class="group-info">
+                    <h3 class="group-name">مجموعة الأفلام</h3>
+                    <p class="group-last-message">لمناقشة الأفلام والمسلسلات</p>
+                </div>
+                <div class="group-meta">
+                    <span class="group-time">الآن</span>
+                    <span class="group-unread">2</span>
+                </div>
+            </div>
+            <div class="group-item" id="group-music">
+                <div class="group-avatar">
+                    <i class="ri-music-line"></i>
+                </div>
+                <div class="group-info">
+                    <h3 class="group-name">مجموعة الموسيقى</h3>
+                    <p class="group-last-message">لمحبي الموسيقى والغناء</p>
+                </div>
+                <div class="group-meta">
+                    <span class="group-time">الآن</span>
+                    <span class="group-unread">4</span>
+                </div>
+            </div>
+            <div class="group-item" id="group-cooking">
+                <div class="group-avatar">
+                    <i class="ri-restaurant-line"></i>
+                </div>
+                <div class="group-info">
+                    <h3 class="group-name">مجموعة الطبخ</h3>
+                    <p class="group-last-message">لتبادل وصفات الطعام</p>
+                </div>
+                <div class="group-meta">
+                    <span class="group-time">الآن</span>
+                    <span class="group-unread">9</span>
+                </div>
+            </div>
+            <div class="group-item" id="group-travel">
+                <div class="group-avatar">
+                    <i class="ri-plane-line"></i>
+                </div>
+                <div class="group-info">
+                    <h3 class="group-name">مجموعة السفر</h3>
+                    <p class="group-last-message">لمشاركة تجارب السفر</p>
+                </div>
+                <div class="group-meta">
+                    <span class="group-time">الآن</span>
+                    <span class="group-unread">1</span>
+                </div>
+            </div>
+            <div class="group-item" id="group-books">
+                <div class="group-avatar">
+                    <i class="ri-book-line"></i>
+                </div>
+                <div class="group-info">
+                    <h3 class="group-name">مجموعة الكتب</h3>
+                    <p class="group-last-message">لمناقشة الكتب والقراءة</p>
+                </div>
+                <div class="group-meta">
+                    <span class="group-time">الآن</span>
+                    <span class="group-unread">7</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Chat Page -->
     <div id="chat-page" class="page hidden">
         <div class="chat-header">
@@ -551,9 +854,6 @@
         </div>
 
         <div id="chat-messages" class="chat-container">
-            <div class="message-date">
-                <span>Today</span>
-            </div>
         </div>
 
         <div class="input-container">
@@ -562,7 +862,7 @@
             </button>
             <div class="input-content-area">
                 <input type="text" id="message-text" class="message-input" placeholder="Message">
-                <span class="text-direction-indicator" id="text-direction">English</span>
+                <span class="text-direction-indicator" id="text-direction" style="display: none;"></span>
             </div>
             <button id="send-message" class="action-button send">
                 <i class="ri-send-plane-fill"></i>
@@ -571,13 +871,6 @@
         </div>
     </div>
 
-    <!-- 
-    <div class="emoji-picker" id="emoji-picker">
-        ... existing code ...
-    </div>
-    -->
-
-    <!-- ... existing image overlay code ... -->
     <div id="image-overlay" class="image-overlay">
         <div class="close-button" id="close-image-button">
             <i class="ri-close-line"></i>
@@ -585,9 +878,39 @@
         <img id="enlarged-image" src="" alt="Enlarged image">
     </div>
 
+    <!-- New Group Modal -->
+    <div id="new-group-modal" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>إنشاء مجموعة جديدة</h3>
+                <div class="close-button" id="close-group-modal">
+                    <i class="ri-close-line"></i>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>اسم المجموعة</label>
+                    <input type="text" id="group-name" placeholder="أدخل اسم المجموعة" 
+                        class="w-full p-4 rounded-lg bg-[#313131] text-white border-none focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+                <div class="form-group">
+                    <label>وصف المجموعة</label>
+                    <input type="text" id="group-description" placeholder="أدخل وصفاً للمجموعة" 
+                        class="w-full p-4 rounded-lg bg-[#313131] text-white border-none focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="create-group-button" 
+                    class="w-full p-4 rounded-lg bg-primary text-white font-medium transition-all hover:bg-opacity-90 active:scale-98 mt-4">
+                    إنشاء المجموعة
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { getDatabase, ref, push, onValue, update, onDisconnect, set, get } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+        import { getDatabase, ref, push, onValue, update, onDisconnect, set, get, remove } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
         import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-storage.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
@@ -609,7 +932,8 @@
 
         let username = '';
         let userRef;
-        let currentPrivateChat = null;
+        let currentChatId = null;
+        let activeUsersRefs = {};
 
         function initializeUser() {
             userRef = ref(db, 'users/' + username);
@@ -621,8 +945,11 @@
             onDisconnect(userRef).update({
                 isOnline: false
             });
+            
+            updateActiveUsersCount();
+            showPage('groups-page');
         }
-
+        
         function updateUserActivity() {
             if (userRef) {
                 update(userRef, {
@@ -646,7 +973,6 @@
                 return false;
             }
             
-            // Check if username exists
             const usersRef = ref(db, 'users');
             const snapshot = await get(usersRef);
             if (snapshot.exists()) {
@@ -658,13 +984,10 @@
             }
             
             try {
-                // Create email from username for Firebase Auth
                 const email = `${username}@chatapp.example`;
                 
-                // Create user in Firebase Auth
                 await createUserWithEmailAndPassword(auth, email, password);
                 
-                // Save user data in Realtime Database
                 await set(ref(db, `users/${username}`), {
                     username: username,
                     lastActive: Date.now(),
@@ -690,13 +1013,10 @@
             }
             
             try {
-                // Create email from username for Firebase Auth
                 const email = `${username}@chatapp.example`;
                 
-                // Login with Firebase Auth
                 await signInWithEmailAndPassword(auth, email, password);
                 
-                // Check if user exists in database
                 const userSnapshot = await get(ref(db, `users/${username}`));
                 if (!userSnapshot.exists()) {
                     loginError.textContent = 'اسم المستخدم غير موجود';
@@ -711,69 +1031,103 @@
             }
         }
 
-        async function sendMessage(messageText, isPrivate = false, imageUrl = null) {
+        async function sendMessage(messageText, imageUrl = null) {
             if (!username || (!messageText && !imageUrl)) {
                 alert('Please enter a message or select an image.');
                 return;
             }
-            const chatRef = ref(db, isPrivate ? `privateChats/${currentPrivateChat}` : 'chat/');
+            
+            const chatRef = ref(db, currentChatId ? `groupChats/${currentChatId}` : 'chat/');
             const timestamp = Date.now();
+            
             await push(chatRef, {
                 username: username,
                 text: messageText,
                 timestamp: timestamp,
                 imageUrl: imageUrl
             });
+            
+            const messagesSnapshot = await get(chatRef);
+            if (messagesSnapshot.exists()) {
+                const messages = [];
+                messagesSnapshot.forEach((childSnapshot) => {
+                    messages.push({
+                        id: childSnapshot.key,
+                        ...childSnapshot.val()
+                    });
+                });
+                
+                messages.sort((a, b) => a.timestamp - b.timestamp);
+                
+                if (messages.length > 50) {
+                    const messagesToDelete = messages.slice(0, messages.length - 50);
+                    for (const message of messagesToDelete) {
+                        const messageRef = ref(db, `${currentChatId ? `groupChats/${currentChatId}` : 'chat/'}/${message.id}`);
+                        await remove(messageRef);
+                    }
+                }
+            }
+            
             updateUserActivity();
         }
 
-        function displayMessages(isPrivate = false) {
-            const chatRef = ref(db, isPrivate ? `privateChats/${currentPrivateChat}` : 'chat/');
-            const chatContainer = document.getElementById(isPrivate ? 'private-chat-messages' : 'chat-messages');
+        function displayMessages(isGroup = false) {
+            const chatRef = ref(db, isGroup ? `groupChats/${currentChatId}` : 'chat/');
+            const chatContainer = document.getElementById('chat-messages');
 
             onValue(chatRef, (snapshot) => {
-                chatContainer.innerHTML = '<div class="message-date"><span>Today</span></div>'; 
-                snapshot.forEach((childSnapshot) => {
-                    const message = childSnapshot.val();
-                    const messageElement = document.createElement('div');
-                    messageElement.classList.add('message');
-                    messageElement.dataset.id = childSnapshot.key;
+                chatContainer.innerHTML = '';
+                
+                if (snapshot.exists()) {
+                    const messages = [];
+                    snapshot.forEach((childSnapshot) => {
+                        messages.push({
+                            id: childSnapshot.key,
+                            ...childSnapshot.val()
+                        });
+                    });
                     
-                    if (message.username === username) {
-                        messageElement.classList.add('self');
-                    } else {
-                        // Add username for messages from others
-                        const usernameElement = document.createElement('span');
-                        usernameElement.classList.add('message-username');
-                        usernameElement.textContent = message.username;
-                        messageElement.appendChild(usernameElement);
-                    }
+                    messages.sort((a, b) => a.timestamp - b.timestamp);
                     
-                    if (message.imageUrl) {
-                        const img = document.createElement('img');
-                        img.src = message.imageUrl;
-                        img.classList.add('image-message');
-                        messageElement.appendChild(img);
-                    }
-                    
-                    if (message.text) {
-                        const textElement = document.createElement('p');
-                        textElement.textContent = message.text;
+                    messages.forEach(message => {
+                        const messageElement = document.createElement('div');
+                        messageElement.classList.add('message');
+                        messageElement.dataset.id = message.id;
                         
-                        // Auto-detect text direction
-                        const direction = detectTextDirection(message.text);
-                        textElement.style.direction = direction;
+                        if (message.username === username) {
+                            messageElement.classList.add('self');
+                        } else {
+                            const usernameElement = document.createElement('span');
+                            usernameElement.classList.add('message-username');
+                            usernameElement.textContent = message.username;
+                            messageElement.appendChild(usernameElement);
+                        }
                         
-                        messageElement.appendChild(textElement);
-                    }
-                    
-                    const timestampElement = document.createElement('span');
-                    timestampElement.classList.add('timestamp');
-                    timestampElement.textContent = new Date(message.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                    messageElement.appendChild(timestampElement);
-                    
-                    chatContainer.appendChild(messageElement);
-                });
+                        if (message.imageUrl) {
+                            const img = document.createElement('img');
+                            img.src = message.imageUrl;
+                            img.classList.add('image-message');
+                            messageElement.appendChild(img);
+                        }
+                        
+                        if (message.text) {
+                            const textElement = document.createElement('p');
+                            textElement.textContent = message.text;
+                            
+                            const direction = detectTextDirection(message.text);
+                            textElement.style.direction = direction;
+                            
+                            messageElement.appendChild(textElement);
+                        }
+                        
+                        const timestampElement = document.createElement('span');
+                        timestampElement.classList.add('timestamp');
+                        timestampElement.textContent = new Date(message.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                        messageElement.appendChild(timestampElement);
+                        
+                        chatContainer.appendChild(messageElement);
+                    });
+                }
                 chatContainer.scrollTop = chatContainer.scrollHeight;
             });
         }
@@ -785,7 +1139,7 @@
             try {
                 await uploadBytes(imageRef, file);
                 const downloadURL = await getDownloadURL(imageRef);
-                await sendMessage('', isPrivate, downloadURL);
+                await sendMessage('', downloadURL);
             } catch (error) {
                 console.error("Error uploading image: ", error);
                 alert("Failed to upload image. Please try again.");
@@ -835,16 +1189,13 @@
             const direction = detectTextDirection(text);
             directionIndicator.textContent = direction === 'rtl' ? 'عربي' : 'English';
             
-            // Show the indicator
             directionIndicator.classList.add('visible');
             
-            // Hide the indicator after 1.5 seconds
             clearTimeout(window.directionIndicatorTimeout);
             window.directionIndicatorTimeout = setTimeout(() => {
                 directionIndicator.classList.remove('visible');
             }, 1500);
             
-            // Also update the input's text alignment
             const messageInput = document.getElementById('message-text');
             messageInput.style.textAlign = direction === 'rtl' ? 'right' : 'left';
             messageInput.style.direction = direction;
@@ -856,9 +1207,7 @@
             const editButton = document.getElementById('edit-message');
             const deleteButton = document.getElementById('delete-message');
             
-            // Show toolbar on message long press or right click
             document.addEventListener('click', (e) => {
-                // Hide toolbar when clicking elsewhere
                 if (!toolbar.contains(e.target) && 
                     !e.target.closest('.message')) {
                     toolbar.classList.remove('active');
@@ -866,7 +1215,6 @@
                 }
             });
             
-            // Long press detection
             let longPressTimer;
             document.addEventListener('mousedown', (e) => {
                 const messageElement = e.target.closest('.message');
@@ -881,7 +1229,6 @@
                 clearTimeout(longPressTimer);
             });
             
-            // Right click on message
             document.addEventListener('contextmenu', (e) => {
                 const messageElement = e.target.closest('.message');
                 if (messageElement) {
@@ -893,18 +1240,15 @@
             function showToolbarForMessage(messageElement, event) {
                 selectedMessageForAction = messageElement;
                 
-                // Position toolbar
                 toolbar.style.left = `${event.pageX}px`;
                 toolbar.style.top = `${event.pageY}px`;
                 toolbar.classList.add('active');
                 
-                // Enable/disable edit button based on whether it's the user's message
                 const isOwnMessage = messageElement.classList.contains('self');
                 editButton.style.display = isOwnMessage ? 'block' : 'none';
                 deleteButton.style.display = isOwnMessage ? 'block' : 'none';
             }
             
-            // Copy message
             copyButton.addEventListener('click', () => {
                 if (selectedMessageForAction) {
                     const textElement = selectedMessageForAction.querySelector('p');
@@ -912,7 +1256,6 @@
                         navigator.clipboard.writeText(textElement.textContent)
                             .then(() => {
                                 toolbar.classList.remove('active');
-                                // Show toast notification
                                 showNotification('تم نسخ الرسالة');
                             })
                             .catch(err => {
@@ -922,15 +1265,11 @@
                 }
             });
             
-            // Edit message (would need Firebase implementation)
             editButton.addEventListener('click', () => {
-                // Implementation would require message ID and Firebase update
                 toolbar.classList.remove('active');
             });
             
-            // Delete message (would need Firebase implementation)
             deleteButton.addEventListener('click', () => {
-                // Implementation would require message ID and Firebase delete
                 toolbar.classList.remove('active');
             });
         }
@@ -959,24 +1298,70 @@
             }, 2000);
         }
 
+        // New function to update active users count for all groups
+        function updateActiveUsersCount() {
+            const groupsToTrack = [
+                null, // Main group
+                'friends-group',
+                'tech-group',
+                'gaming-group',
+                'sports-group',
+                'movies-group',
+                'music-group',
+                'cooking-group',
+                'travel-group',
+                'books-group'
+            ];
+            
+            for (const groupId of groupsToTrack) {
+                const usersRef = ref(db, 'users/');
+                
+                if (activeUsersRefs[groupId]) {
+                    // Unsubscribe from previous listener
+                    activeUsersRefs[groupId]();
+                }
+                
+                // Create a new listener for each group
+                activeUsersRefs[groupId] = onValue(usersRef, (snapshot) => {
+                    if (snapshot.exists()) {
+                        let activeCount = 0;
+                        snapshot.forEach((userSnapshot) => {
+                            const userData = userSnapshot.val();
+                            if (userData.isOnline) {
+                                activeCount++;
+                            }
+                        });
+                        
+                        // Update the UI to show active users count
+                        let unreadElement;
+                        if (groupId === null) {
+                            unreadElement = document.querySelector('#main-group .group-unread');
+                        } else {
+                            unreadElement = document.querySelector(`#group-${groupId.split('-')[0]} .group-unread`);
+                        }
+                        
+                        if (unreadElement) {
+                            unreadElement.textContent = activeCount;
+                        }
+                    }
+                });
+            }
+        }
+
         window.onload = function() {
             showPage('auth-page');
 
-            // Check if user is already logged in
             auth.onAuthStateChanged((user) => {
                 if (user) {
-                    // Extract username from email
                     const email = user.email;
                     if (email && email.includes('@chatapp.example')) {
-                        window.username = email.split('@')[0];
+                        username = email.split('@')[0];
                         initializeUser();
-                        showPage('chat-page');
-                        displayMessages();
+                        showPage('groups-page');
                     }
                 }
             });
 
-            // Auth tabs switching
             document.getElementById('login-tab').addEventListener('click', function() {
                 document.querySelectorAll('.auth-tab').forEach(tab => tab.classList.remove('active'));
                 document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
@@ -991,7 +1376,6 @@
                 document.getElementById('register-form').classList.add('active');
             });
 
-            // Register form submission
             document.getElementById('register-button').addEventListener('click', async () => {
                 const username = document.getElementById('register-username').value.trim();
                 const password = document.getElementById('register-password').value;
@@ -999,30 +1383,24 @@
                 
                 const success = await registerUser(username, password, confirmPassword);
                 if (success) {
-                    // Set global username
                     window.username = username;
                     initializeUser();
-                    showPage('chat-page');
-                    displayMessages();
+                    showPage('groups-page');
                 }
             });
 
-            // Login form submission
             document.getElementById('login-button').addEventListener('click', async () => {
                 const username = document.getElementById('login-username').value.trim();
                 const password = document.getElementById('login-password').value;
                 
                 const success = await loginUser(username, password);
                 if (success) {
-                    // Set global username
                     window.username = username;
                     initializeUser();
-                    showPage('chat-page');
-                    displayMessages();
+                    showPage('groups-page');
                 }
             });
 
-            // Enter key listeners for forms
             document.getElementById('login-password').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
                     document.getElementById('login-button').click();
@@ -1035,9 +1413,81 @@
                 }
             });
 
-            // Back button redirects to auth page instead of username page
             document.getElementById('back-to-menu').addEventListener('click', () => {
-                // Sign out from Firebase Auth
+                showPage('groups-page');
+            });
+
+            document.getElementById('main-group').addEventListener('click', () => {
+                showPage('chat-page');
+                currentChatId = null; 
+                document.querySelector('.chat-header h1').textContent = "المجموعة العامة";
+                displayMessages(false);
+            });
+            
+            document.getElementById('group-friends').addEventListener('click', () => {
+                showPage('chat-page');
+                currentChatId = 'friends-group'; 
+                document.querySelector('.chat-header h1').textContent = "مجموعة الأصدقاء";
+                displayMessages(true);
+            });
+
+            document.getElementById('group-tech').addEventListener('click', () => {
+                showPage('chat-page');
+                currentChatId = 'tech-group'; 
+                document.querySelector('.chat-header h1').textContent = "مجموعة التقنية";
+                displayMessages(true);
+            });
+            
+            document.getElementById('group-gaming').addEventListener('click', () => {
+                showPage('chat-page');
+                currentChatId = 'gaming-group'; 
+                document.querySelector('.chat-header h1').textContent = "مجموعة الألعاب";
+                displayMessages(true);
+            });
+            
+            document.getElementById('group-sports').addEventListener('click', () => {
+                showPage('chat-page');
+                currentChatId = 'sports-group'; 
+                document.querySelector('.chat-header h1').textContent = "مجموعة الرياضة";
+                displayMessages(true);
+            });
+            
+            document.getElementById('group-movies').addEventListener('click', () => {
+                showPage('chat-page');
+                currentChatId = 'movies-group'; 
+                document.querySelector('.chat-header h1').textContent = "مجموعة الأفلام";
+                displayMessages(true);
+            });
+            
+            document.getElementById('group-music').addEventListener('click', () => {
+                showPage('chat-page');
+                currentChatId = 'music-group'; 
+                document.querySelector('.chat-header h1').textContent = "مجموعة الموسيقى";
+                displayMessages(true);
+            });
+            
+            document.getElementById('group-cooking').addEventListener('click', () => {
+                showPage('chat-page');
+                currentChatId = 'cooking-group'; 
+                document.querySelector('.chat-header h1').textContent = "مجموعة الطبخ";
+                displayMessages(true);
+            });
+            
+            document.getElementById('group-travel').addEventListener('click', () => {
+                showPage('chat-page');
+                currentChatId = 'travel-group'; 
+                document.querySelector('.chat-header h1').textContent = "مجموعة السفر";
+                displayMessages(true);
+            });
+            
+            document.getElementById('group-books').addEventListener('click', () => {
+                showPage('chat-page');
+                currentChatId = 'books-group'; 
+                document.querySelector('.chat-header h1').textContent = "مجموعة الكتب";
+                displayMessages(true);
+            });
+
+            document.getElementById('logout-button').addEventListener('click', () => {
                 auth.signOut().then(() => {
                     showPage('auth-page');
                 }).catch((error) => {
@@ -1073,13 +1523,101 @@
                 }
             });
             
-            // Add event listener for input text changes
             document.getElementById('message-text').addEventListener('input', function(e) {
-                updateTextDirectionIndicator(this.value);
+                // Removed updating text direction indicator functionality
+            });
+
+            document.getElementById('image-overlay').addEventListener('click', function(e) {
+                if (e.target === this || e.target.id === 'close-image-button' || e.target.closest('#close-image-button')) {
+                    this.classList.remove('active');
+                }
             });
             
-            // Initialize new features
             initializeMessageActions();
+            
+            document.getElementById('new-group-modal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                }
+            });
+            
+            document.getElementById('create-group-button').addEventListener('click', async function() {
+                const groupName = document.getElementById('group-name').value.trim();
+                const groupDescription = document.getElementById('group-description').value.trim();
+                
+                if (!groupName) {
+                    alert('الرجاء إدخال اسم المجموعة');
+                    return;
+                }
+                
+                try {
+                    const newGroupRef = push(ref(db, 'groups/'));
+                    const groupId = newGroupRef.key;
+                    
+                    await set(newGroupRef, {
+                        name: groupName,
+                        description: groupDescription,
+                        createdBy: username,
+                        createdAt: Date.now()
+                    });
+                    
+                    await set(ref(db, `groupChats/${groupId}/welcome`), {
+                        username: 'system',
+                        text: `مرحباً بكم في ${groupName}!`,
+                        timestamp: Date.now()
+                    });
+                    
+                    document.getElementById('new-group-modal').classList.remove('active');
+                    document.getElementById('group-name').value = '';
+                    document.getElementById('group-description').value = '';
+                    
+                    currentChatId = groupId;
+                    document.querySelector('.chat-header h1').textContent = groupName;
+                    showPage('chat-page');
+                    displayMessages(true);
+                    
+                } catch (error) {
+                    console.error('Error creating group:', error);
+                    alert('حدث خطأ أثناء إنشاء المجموعة');
+                }
+            });
+            
+            async function initializeAllGroups() {
+                const groupsToInitialize = [
+                    { id: 'friends-group', name: 'مجموعة الأصدقاء', description: 'للنقاشات الودية والمرح' },
+                    { id: 'tech-group', name: 'مجموعة التقنية', description: 'لمناقشة أحدث التقنيات' },
+                    { id: 'gaming-group', name: 'مجموعة الألعاب', description: 'لمحبي الألعاب الإلكترونية' },
+                    { id: 'sports-group', name: 'مجموعة الرياضة', description: 'لمتابعة أخبار الرياضة' },
+                    { id: 'movies-group', name: 'مجموعة الأفلام', description: 'لمناقشة الأفلام والمسلسلات' },
+                    { id: 'music-group', name: 'مجموعة الموسيقى', description: 'لمحبي الموسيقى والغناء' },
+                    { id: 'cooking-group', name: 'مجموعة الطبخ', description: 'لتبادل وصفات الطعام' },
+                    { id: 'travel-group', name: 'مجموعة السفر', description: 'لمشاركة تجارب السفر' },
+                    { id: 'books-group', name: 'مجموعة الكتب', description: 'لمناقشة الكتب والقراءة' }
+                ];
+                
+                for (const group of groupsToInitialize) {
+                    const groupRef = ref(db, `groups/${group.id}`);
+                    const snapshot = await get(groupRef);
+                    
+                    if (!snapshot.exists()) {
+                        await set(groupRef, {
+                            name: group.name,
+                            description: group.description,
+                            createdBy: "system",
+                            createdAt: Date.now()
+                        });
+                        
+                        await set(ref(db, `groupChats/${group.id}/welcome`), {
+                            username: 'system',
+                            text: `مرحباً بكم في ${group.name}!`,
+                            timestamp: Date.now()
+                        });
+                    }
+                }
+            }
+            
+            initializeAllGroups();
+            updateActiveUsersCount();
         };
     </script>
 </body>
