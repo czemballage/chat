@@ -1,0 +1,78 @@
+/* Basic styling for the chat app */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background-color: #f0f0f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    color: #333;
+}
+
+#chat-container {
+    width: 80%;
+    max-width: 600px;
+    margin: 20px auto;
+    border: 1px solid #ddd;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    height: 90vh; /* Adjusted height */
+}
+
+#messages-area {
+    flex-grow: 1; /* Allow this area to take up available space */
+    overflow-y: auto; /* Changed from scroll to auto for better UX */
+    border: 1px solid #eee;
+    padding: 15px;
+    margin-bottom: 15px;
+    background-color: #f9f9f9;
+    min-height: 200px; /* Ensure a minimum height */
+}
+
+#input-area {
+    display: flex;
+    padding: 10px 0; /* Adjusted padding */
+    border-top: 1px solid #eee; /* Added a top border */
+}
+
+#message-input {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px; /* Added border-radius */
+    margin-right: 10px; /* Added margin for spacing */
+}
+
+#send-button {
+    padding: 10px 20px;
+    border: none; /* Removed default border */
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    border-radius: 5px; /* Added border-radius */
+    transition: background-color 0.3s ease; /* Smooth transition for hover */
+}
+
+#send-button:hover {
+    background-color: #0056b3; /* Darker shade on hover */
+}
+
+/* CSS Animation for new messages */
+.new-message {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px); /* Slight upward movement */
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
