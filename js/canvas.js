@@ -10,9 +10,19 @@ class PixelCanvas {
         this.onionSkinEnabled = false;
         this.gridEnabled = true;
         this.onionSkinOpacity = 0.25;
+        this.currentTool = 'pencil';
+        this.previousTool = 'pencil';
 
         this.addEventListeners();
         console.log("Pixel canvas ready.");
+    }
+
+    setTool(tool) {
+        if (this.currentTool !== 'color-picker') {
+            this.previousTool = this.currentTool;
+        }
+        this.currentTool = tool;
+        console.log("Tool changed to:", tool);
     }
 
     init(project) {
@@ -51,8 +61,8 @@ class PixelCanvas {
     fitToContainer() {
         const container = this.canvas.parentElement;
         if (!container) return;
-        const maxWidth = container.clientWidth * 0.8;
-        const maxHeight = container.clientHeight * 0.8;
+        const maxWidth = container.clientWidth * 0.95;
+        const maxHeight = container.clientHeight * 0.95;
         const ratio = this.canvas.width / this.canvas.height;
         let newWidth = maxWidth;
         let newHeight = newWidth / ratio;
@@ -111,32 +121,106 @@ class PixelCanvas {
         this.ctx.stroke();
     }
 
+    drawPixel(x, y, color) {
+        this.ctx.fillStyle = color;
+        this.ctx.fillRect(x, y, 1, 1);
+    }
+
     addEventListeners() {
         this.canvas.addEventListener('mousedown', (e) => this.startDrawing(e));
-        this.canvas.addEventListener('mousemove', (e) => this.draw(e));
+        this.canvas.addEventListener('mousemove', (e) => this.handleDraw(e, 'move'));
         this.canvas.addEventListener('mouseup', () => this.stopDrawing());
         this.canvas.addEventListener('mouseleave', () => this.stopDrawing());
     }
 
     startDrawing(e) {
         this.isDrawing = true;
-        this.draw(e);
+        this.handleDraw(e, 'down');
     }
 
     stopDrawing() {
         this.isDrawing = false;
     }
 
-    draw(e) {
-        if (!this.isDrawing || !this.project) return;
+    floodFill(startX, startY) {
+        const frame = this.project.frames[this.currentFrameIndex];
+        const targetColor = frame[startY][startX];
+        const fillColor = this.getCurrentColor();
+
+        if (targetColor === fillColor) return false;
+
+        const queue = [[startX, startY]];
+        const visited = new Set([`${startX},${startY}`]);
+        const width = this.canvas.width;
+        const height = this.canvas.height;
+
+        frame[startY][startX] = fillColor;
+
+        while (queue.length > 0) {
+            const [x, y] = queue.shift();
+
+            const neighbors = [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]];
+            for (const [nx, ny] of neighbors) {
+                const key = `${nx},${ny}`;
+                if (nx >= 0 && nx < width && ny >= 0 && ny < height && !visited.has(key) && frame[ny][nx] === targetColor) {
+                    visited.add(key);
+                    frame[ny][nx] = fillColor;
+                    queue.push([nx, ny]);
+                }
+            }
+        }
+        return true;
+    }
+
+    handleDraw(e, eventType) {
+        if (!this.project) return;
+        if (eventType === 'move' && !this.isDrawing) return;
+
         const { gridX, gridY } = this.getCanvasCoordinates(e);
         if (gridX < 0 || gridX >= this.canvas.width || gridY < 0 || gridY >= this.canvas.height) return;
-        const color = this.getCurrentColor();
-        if (this.project.frames[this.currentFrameIndex][gridY][gridX] === color) return;
-        this.project.frames[this.currentFrameIndex][gridY][gridX] = color;
-        this.project.updatedAt = new Date().toISOString();
-        this.project.isDirty = true;
-        this.render();
+
+        switch (this.currentTool) {
+            case 'pencil': {
+                const color = this.getCurrentColor();
+                if (this.project.frames[this.currentFrameIndex][gridY][gridX] !== color) {
+                    this.project.frames[this.currentFrameIndex][gridY][gridX] = color;
+                    this.drawPixel(gridX, gridY, color); // Optimized draw
+                    this.project.updatedAt = new Date().toISOString();
+                    this.project.isDirty = true;
+                }
+                break;
+            }
+            case 'eraser': {
+                if (this.project.frames[this.currentFrameIndex][gridY][gridX] !== null) {
+                    this.project.frames[this.currentFrameIndex][gridY][gridX] = null;
+                    this.project.updatedAt = new Date().toISOString();
+                    this.project.isDirty = true;
+                    this.render(); // Full render for eraser
+                }
+                break;
+            }
+            case 'fill': {
+                if (eventType === 'down') {
+                    if (this.floodFill(gridX, gridY)) {
+                        this.project.updatedAt = new Date().toISOString();
+                        this.project.isDirty = true;
+                        this.render(); // Full render for fill
+                    }
+                }
+                break;
+            }
+            case 'color-picker': {
+                if (eventType === 'down') {
+                    const color = this.project.frames[this.currentFrameIndex][gridY][gridX];
+                    if (color) {
+                        this.canvas.dispatchEvent(new CustomEvent('colorpicked', { detail: { color } }));
+                    }
+                    this.setTool(this.previousTool);
+                    this.canvas.dispatchEvent(new CustomEvent('toolswitched', { detail: { tool: this.previousTool } }));
+                }
+                break;
+            }
+        }
     }
 
     getCanvasCoordinates(e) {

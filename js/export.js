@@ -23,6 +23,47 @@ async function exportToPngZip(project, scale) {
     return zipBlob;
 }
 
+async function exportToMp4(project, scale) {
+    const statusEl = document.getElementById('exportStatus');
+    const canvasSize = project.canvasSize;
+    const scaledWidth = canvasSize.width * scale;
+    const scaledHeight = canvasSize.height * scale;
+
+    if (scaledWidth % 2 !== 0 || scaledHeight % 2 !== 0) {
+        throw new Error(`Canvas dimensions must be a multiple of 2 for MP4 export. Current scaled size is ${scaledWidth}x${scaledHeight}.`);
+    }
+
+    statusEl.textContent = 'Loading MP4 encoder...';
+    const encoder = await HME.createH264MP4Encoder();
+
+    encoder.width = scaledWidth;
+    encoder.height = scaledHeight;
+    encoder.frameRate = project.fps;
+    encoder.initialize();
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = scaledWidth;
+    canvas.height = scaledHeight;
+
+    for (let i = 0; i < project.frames.length; i++) {
+        statusEl.textContent = `Encoding frame ${i + 1} of ${project.frames.length}...`;
+        const frameData = project.frames[i];
+        drawScaledFrame(ctx, frameData, canvasSize, scale);
+
+        const rgba = ctx.getImageData(0, 0, scaledWidth, scaledHeight).data;
+        encoder.addFrameRgba(rgba);
+    }
+
+    statusEl.textContent = 'Finalizing video...';
+    encoder.finalize();
+    const uint8Array = encoder.FS.readFile(encoder.outputFilename);
+    encoder.delete();
+
+    statusEl.textContent = 'Done!';
+    return new Blob([uint8Array], { type: 'video/mp4' });
+}
+
 function exportToGif(project, scale, options) {
     return new Promise((resolve, reject) => {
         const gif = new GIF({

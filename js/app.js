@@ -12,6 +12,18 @@ document.addEventListener('DOMContentLoaded', () => {
     pixelCanvas = new PixelCanvas('pixelCanvas');
     initSettings();
 
+    // Canvas event listeners
+    pixelCanvas.canvas.addEventListener('colorpicked', (e) => {
+        setActiveColor(e.detail.color);
+    });
+
+    pixelCanvas.canvas.addEventListener('toolswitched', (e) => {
+        const toolSidebar = document.querySelector('.tool-sidebar-left');
+        const toolButtons = toolSidebar.querySelectorAll('.tool-button');
+        toolButtons.forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`${e.detail.tool}-tool`).classList.add('active');
+    });
+
     // Basic screen navigation logic
     const screens = document.querySelectorAll('.screen');
     const newProjectBtn = document.getElementById('newProjectBtn');
@@ -200,6 +212,25 @@ document.addEventListener('DOMContentLoaded', () => {
         renderTimeline(currentProject, newFrameIndex);
     });
 
+    // --- Tool Selection Logic ---
+    const toolSidebar = document.querySelector('.tool-sidebar-left');
+
+    toolSidebar.addEventListener('click', (e) => {
+        const button = e.target.closest('button');
+        if (!button || !pixelCanvas) return;
+
+        // Don't treat non-tool buttons as selectable tools
+        if (!button.classList.contains('tool-button')) return;
+
+        const tool = button.id.replace('-tool', '');
+        pixelCanvas.setTool(tool);
+
+        // Update active class
+        const toolButtons = toolSidebar.querySelectorAll('.tool-button');
+        toolButtons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+    });
+
     // --- Onion Skin and Animation Preview ---
     const onionSkinBtn = document.getElementById('onion-skin-btn');
     const playAnimationBtn = document.getElementById('play-animation-btn');
@@ -308,6 +339,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
                 blob = await exportToGif(currentProject, scale, options);
                 filename += '.gif';
+            } else if (format === 'mp4') {
+                blob = await exportToMp4(currentProject, scale);
+                filename += '.mp4';
             }
 
             if (blob) {

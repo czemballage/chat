@@ -3,10 +3,10 @@
 function renderProjectList() {
     const projects = projectStorage.getProjects();
     const projectListEl = document.getElementById('projectList');
-    projectListEl.innerHTML = ''; // Clear existing list
+    projectListEl.innerHTML = '';
 
     if (projects.length === 0) {
-        projectListEl.innerHTML = `<p>No projects yet. Create one!</p>`;
+        projectListEl.innerHTML = `<p class="empty-message">No projects yet. Let's create one!</p>`;
         return;
     }
 
@@ -14,11 +14,53 @@ function renderProjectList() {
         const projectItem = document.createElement('div');
         projectItem.className = 'project-item';
         projectItem.dataset.id = project.id;
+
+        // --- Thumbnail Generation ---
+        const thumbnailCanvas = document.createElement('canvas');
+        thumbnailCanvas.width = 128; // Fixed thumbnail size
+        thumbnailCanvas.height = 128;
+        const thumbCtx = thumbnailCanvas.getContext('2d');
+        thumbCtx.imageSmoothingEnabled = false;
+
+        const firstFrame = project.frames[0];
+        if (firstFrame) {
+            const scaleX = thumbnailCanvas.width / project.canvasSize.width;
+            const scaleY = thumbnailCanvas.height / project.canvasSize.height;
+            const scale = Math.min(scaleX, scaleY);
+
+            const offsetX = (thumbnailCanvas.width - (project.canvasSize.width * scale)) / 2;
+            const offsetY = (thumbnailCanvas.height - (project.canvasSize.height * scale)) / 2;
+
+            thumbCtx.fillStyle = '#ffffff';
+            thumbCtx.fillRect(0, 0, thumbnailCanvas.width, thumbnailCanvas.height);
+
+            for (let y = 0; y < project.canvasSize.height; y++) {
+                for (let x = 0; x < project.canvasSize.width; x++) {
+                    if (firstFrame[y][x]) {
+                        thumbCtx.fillStyle = firstFrame[y][x];
+                        thumbCtx.fillRect(offsetX + (x * scale), offsetY + (y * scale), scale, scale);
+                    }
+                }
+            }
+        }
+        const thumbnailUrl = thumbnailCanvas.toDataURL();
+        // --- End Thumbnail Generation ---
+
+        const metadata = `
+            <div class="project-meta">
+                <span>${project.canvasSize.width}x${project.canvasSize.height}</span>
+                <span>${project.frames.length} frames</span>
+            </div>
+        `;
+
         projectItem.innerHTML = `
-            <div class="thumbnail"></div>
+            <img src="${thumbnailUrl}" alt="Project preview" class="thumbnail">
             <h3>${project.name}</h3>
-            <p>Updated: ${new Date(project.updatedAt).toLocaleDateString()}</p>
-            <button class="delete-project-btn">Delete</button>
+            <div class="project-info">
+                ${metadata}
+                <p>Updated: ${new Date(project.updatedAt).toLocaleDateString()}</p>
+            </div>
+            <button class="delete-project-btn">X</button>
         `;
         projectListEl.appendChild(projectItem);
     });
@@ -55,7 +97,31 @@ function renderTimeline(project, activeFrameIndex = 0) {
     });
 }
 
+function setActiveColor(color) {
+    const paletteContainer = document.getElementById('color-palette-container');
+    const swatches = paletteContainer.querySelectorAll('.color-swatch');
+
+    swatches.forEach(swatch => {
+        if (swatch.dataset.color === color) {
+            swatch.classList.add('active');
+        } else {
+            swatch.classList.remove('active');
+        }
+    });
+}
+
 function initializeUI() {
+    // Color Palette Swatch selection
+    const paletteContainer = document.getElementById('color-palette-container');
+    if (paletteContainer) {
+        paletteContainer.addEventListener('click', (e) => {
+            const swatch = e.target.closest('.color-swatch');
+            if (swatch) {
+                setActiveColor(swatch.dataset.color);
+            }
+        });
+    }
+
     // FPS slider value display
     const fpsSlider = document.getElementById('fps');
     const fpsValue = document.getElementById('fpsValue');
